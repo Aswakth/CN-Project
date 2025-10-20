@@ -1,0 +1,6 @@
+File,Loss(%),Throughput(Mbps),LossEvents,Retransmits
+test_100kb.bin,0,0.255319,3,97
+test_100kb.bin,1,0.19133,4,96
+test_100kb.bin,5,0.191783,4,97
+test_100kb.bin,10,0.24231,4,105
+test_100kb.bin,20,0.0488561,18,105
