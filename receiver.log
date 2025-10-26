@@ -32,8 +32,8 @@
 [Receiver] Received Packet 29 of 32 for Blast 1 with records (464-479)
 [Receiver] Received Packet 30 of 32 for Blast 1 with records (480-495)
 [Receiver] Received Packet 31 of 32 for Blast 1 with records (496-499)
-[Receiver] Sent REC_MISS: [[13,13],[35,35],[38,38],[65,65],[106,106],[132,132],[206,206],[215,215],[374,374],[385,385],[466,466],[498,498]]
 [Receiver] is_blast_over: Blast 1
+[Receiver] Sent REC_MISS: [[80,80],[139,139],[216,216],[219,219],[225,225],[232,232],[234,234],[315,315],[484,484]]
 [Receiver] Received Packet 0 of 32 for Blast 2 with records (500-515)
 [Receiver] Received Packet 1 of 32 for Blast 2 with records (516-531)
 [Receiver] Received Packet 2 of 32 for Blast 2 with records (532-547)
@@ -66,8 +66,8 @@
 [Receiver] Received Packet 29 of 32 for Blast 2 with records (964-979)
 [Receiver] Received Packet 30 of 32 for Blast 2 with records (980-995)
 [Receiver] Received Packet 31 of 32 for Blast 2 with records (996-999)
-[Receiver] Sent REC_MISS: [[506,506],[525,525],[554,554],[593,593],[626,626],[646,646],[695,695],[847,847],[886,886],[907,907],[950,950],[958,958],[970,970]]
 [Receiver] is_blast_over: Blast 2
+[Receiver] Sent REC_MISS: [[534,534],[668,668],[671,671],[812,812],[857,857],[953,953],[970,970],[981,981]]
 [Receiver] Received Packet 0 of 17 for Blast 3 with records (1000-1015)
 [Receiver] Received Packet 1 of 17 for Blast 3 with records (1016-1031)
 [Receiver] Received Packet 2 of 17 for Blast 3 with records (1032-1047)
@@ -85,9 +85,8 @@
 [Receiver] Received Packet 14 of 17 for Blast 3 with records (1224-1239)
 [Receiver] Received Packet 15 of 17 for Blast 3 with records (1240-1255)
 [Receiver] Received Packet 16 of 17 for Blast 3 with records (1256-1257)
-[Receiver] Sent REC_MISS: [[1032,1032],[1113,1113],[1142,1142],[1215,1215],[1234,1234]]
 [Receiver] is_blast_over: Blast 3
+[Receiver] Sent REC_MISS: [[1036,1036],[1057,1057],[1141,1141],[1154,1154],[1160,1161],[1240,1240]]
 [Receiver] Sender disconnected
-[Receiver] Generated file recv_testfile.bin
-[Receiver] Summary: blasts_received=3, bytes_received=655456, records_written=1228, records_lost_sim=30
-[Receiver] Duration=0.0182001s, Throughput=3.60139e+07 B/s (288.111 Mbps)
+[Receiver] Summary: blasts=3, bytes=655456, written=1234, lost=24
+[Receiver] Duration=0.00781491s, Throughput=8.38725e+07 B/s (670.98 Mbps)
