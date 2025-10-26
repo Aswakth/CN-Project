@@ -21,12 +21,76 @@ static ofstream receiver_log;
 FileHeader negotiated_header;
 bool done_receiving = false;
 
+// Track missing records per blast across retransmissions
+unordered_map<uint32_t, set<uint32_t>> missing_records_per_blast;
+
 bool safe_open_recvfile(fstream &f, const string &name) {
     ofstream create(name, ios::binary | ios::trunc);
     if (!create) return false;
     create.close();
     f.open(name, ios::in | ios::out | ios::binary);
     return f.is_open();
+}
+
+void process_blast(BlastPacket &pkt, fstream &fout, uint64_t &total_records_written,
+                   uint64_t &total_records_lost_sim, double &packet_loss_percent,
+                   const sockaddr_in &sender_addr, socklen_t addrlen,
+                   uint32_t blast_id)
+{
+    uniform_real_distribution<double> dist(0.0, 100.0);
+    uint32_t rec_size = negotiated_header.record_size;
+    size_t offset = 0;
+
+    auto &missing_set = missing_records_per_blast[blast_id]; // track missing cumulatively
+
+    for (auto &seg : pkt.segments) {
+        for (uint32_t r = seg.start; r <= seg.end; ++r) {
+            double p = dist(rng);
+            bool first_receive = missing_set.find(r) == missing_set.end();
+
+            if (first_receive && p < packet_loss_percent) {
+                // record is lost in simulation
+                missing_set.insert(r);
+                total_records_lost_sim++;
+            } else {
+                fout.seekp((streampos)r * rec_size);
+                fout.write(pkt.data.data() + offset, rec_size);
+                total_records_written++;
+                missing_set.erase(r); // mark as received
+                if (!first_receive) {
+                    receiver_log << "[Receiver] Retransmitted record " << r << " written\n";
+                }
+            }
+            offset += rec_size;
+        }
+    }
+
+    // Generate REC_MISS JSON from missing_set
+    string rec_miss = "[]";
+    if (!missing_set.empty()) {
+        vector<uint32_t> sorted_missing(missing_set.begin(), missing_set.end());
+        sort(sorted_missing.begin(), sorted_missing.end());
+        vector<pair<uint32_t,uint32_t>> ranges;
+        uint32_t start = sorted_missing[0], end = start;
+        for (size_t i = 1; i < sorted_missing.size(); ++i) {
+            if (sorted_missing[i] == end + 1) end = sorted_missing[i];
+            else { ranges.emplace_back(start,end); start = end = sorted_missing[i]; }
+        }
+        ranges.emplace_back(start,end);
+
+        stringstream ss;
+        ss << "[";
+        for (size_t i = 0; i < ranges.size(); ++i) {
+            if (i) ss << ",";
+            ss << "[" << ranges[i].first << "," << ranges[i].second << "]";
+        }
+        ss << "]";
+        rec_miss = ss.str();
+    }
+
+    receiver_log << "[Receiver] is_blast_over: Blast " << blast_id << endl;
+    sendto(sockfd, rec_miss.c_str(), rec_miss.size(), 0, (sockaddr*)&sender_addr, addrlen);
+    receiver_log << "[Receiver] Sent REC_MISS: " << rec_miss << endl;
 }
 
 void network_receiver_thread() {
@@ -37,11 +101,11 @@ void network_receiver_thread() {
         return;
     }
 
-    uniform_real_distribution<double> dist(0.0, 100.0);
     unordered_map<uint32_t, tuple<uint32_t, vector<vector<Segment>>, vector<vector<char>>>> reassembly;
 
     uint64_t total_blasts_received = 0, total_records_written = 0, total_records_lost_sim = 0, total_bytes_received = 0;
     chrono::steady_clock::time_point recv_start_time, recv_end_time;
+    uniform_real_distribution<double> dist(0.0, 100.0);
 
     while (!done_receiving) {
         char buf[65536];
@@ -123,44 +187,7 @@ void network_receiver_thread() {
                     for (auto &v : get<2>(entry)) pkt.data.insert(pkt.data.end(), v.begin(), v.end());
                     reassembly.erase(blast_id);
 
-                    // Write to file
-                    uint32_t rec_size = negotiated_header.record_size;
-                    size_t offset = 0;
-                    vector<pair<uint32_t,uint32_t>> missing_ranges;
-                    for (auto &seg : pkt.segments) {
-                        for (uint32_t r = seg.start; r <= seg.end; ++r) {
-                            double p = dist(rng);
-                            if (p < packet_loss_percent) {
-                                if (!missing_ranges.empty() && missing_ranges.back().second + 1 == r)
-                                    missing_ranges.back().second = r;
-                                else missing_ranges.emplace_back(r, r);
-                                total_records_lost_sim++;
-                            } else {
-                                fout.seekp((streampos)r * rec_size);
-                                fout.write(pkt.data.data() + offset, rec_size);
-                                total_records_written++;
-                            }
-                            offset += rec_size;
-                        }
-                    }
-
-                    // send REC_MISS JSON (or [] if none)
-                    string rec_miss = "[]";
-                    if (!missing_ranges.empty()) {
-                        stringstream ss;
-                        ss << "[";
-                        for (size_t i = 0; i < missing_ranges.size(); ++i) {
-                            if (i) ss << ",";
-                            ss << "[" << missing_ranges[i].first << "," << missing_ranges[i].second << "]";
-                        }
-                        ss << "]";
-                        rec_miss = ss.str();
-                    }
-
-                    // 🔀 LOG ORDER CHANGED HERE
-                    receiver_log << "[Receiver] is_blast_over: Blast " << blast_id << endl;
-                    sendto(sockfd, rec_miss.c_str(), rec_miss.size(), 0, (sockaddr*)&sender_addr, addrlen);
-                    receiver_log << "[Receiver] Sent REC_MISS: " << rec_miss << endl;
+                    process_blast(pkt, fout, total_records_written, total_records_lost_sim, packet_loss_percent, sender_addr, addrlen, blast_id);
 
                     total_blasts_received++;
                     total_bytes_received += n;
@@ -168,62 +195,6 @@ void network_receiver_thread() {
                 }
             }
         }
-
-        // Legacy packet fallback
-        BlastPacket pkt;
-        if ((size_t)n < sizeof(uint32_t)) { receiver_log << "[Receiver] malformed legacy packet\n"; continue; }
-        memcpy(&pkt.num_segments, buf, sizeof(uint32_t));
-        pkt.segments.resize(pkt.num_segments);
-        size_t need = sizeof(uint32_t) + pkt.num_segments * sizeof(Segment);
-        if ((size_t)n < need) { receiver_log << "[Receiver] malformed legacy packet\n"; continue; }
-        memcpy(pkt.segments.data(), buf + sizeof(uint32_t), pkt.num_segments * sizeof(Segment));
-        pkt.data.assign(buf + need, buf + n);
-
-        uint32_t rec_size = negotiated_header.record_size;
-        size_t offset = 0;
-        vector<pair<uint32_t,uint32_t>> missing_ranges;
-        for (auto &seg : pkt.segments) {
-            for (uint32_t r = seg.start; r <= seg.end; ++r) {
-                double p = dist(rng);
-                if (p < packet_loss_percent) {
-                    if (!missing_ranges.empty() && missing_ranges.back().second + 1 == r)
-                        missing_ranges.back().second = r;
-                    else missing_ranges.emplace_back(r, r);
-                    total_records_lost_sim++;
-                } else {
-                    fout.seekp((streampos)r * rec_size);
-                    fout.write(pkt.data.data() + offset, rec_size);
-                    total_records_written++;
-                }
-                offset += rec_size;
-            }
-        }
-
-        string rec_miss = "[]";
-        if (!missing_ranges.empty()) {
-            stringstream ss;
-            ss << "[";
-            for (size_t i = 0; i < missing_ranges.size(); ++i) {
-                if (i) ss << ",";
-                ss << "[" << missing_ranges[i].first << "," << missing_ranges[i].second << "]";
-            }
-            ss << "]";
-            rec_miss = ss.str();
-        }
-
-        // 🔀 LOG ORDER CHANGED HERE TOO
-        receiver_log << "[Receiver] is_blast_over: Blast " << (total_blasts_received + 1) << endl;
-        sendto(sockfd, rec_miss.c_str(), rec_miss.size(), 0, (sockaddr*)&sender_addr, addrlen);
-        receiver_log << "[Receiver] Sent REC_MISS: " << rec_miss << endl;
-
-        total_blasts_received++;
-        total_bytes_received += n;
-
-        if (!pkt.segments.empty()) {
-            uint32_t start_rec = pkt.segments.front().start, end_rec = pkt.segments.back().end;
-            receiver_log << "[Receiver] Received Blast " << total_blasts_received << " with records ("
-                         << start_rec << "-" << end_rec << ")" << endl;
-        } else receiver_log << "[Receiver] Received Blast " << total_blasts_received << " with 0 segments" << endl;
     }
 
     // Final stats

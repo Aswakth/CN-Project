@@ -53,7 +53,6 @@ void disk_read_thread(const string &filename) {
     ifstream fin(filename, ios::binary);
     if (!fin) {
         sender_log << "[DiskRead] Cannot open file: " << filename << endl;
-        // signal done and return (avoid exit)
         done_reading = true;
         cv.notify_one();
         return;
@@ -73,7 +72,6 @@ void disk_read_thread(const string &filename) {
         for (uint32_t i = 0; i < records_in_this_blast; ++i) {
             vector<char> rec(record_size);
             fin.read(rec.data(), record_size);
-            // if last chunk read fewer bytes (shouldn't happen if file_size computed correctly), pad with zeros
             if ((size_t)fin.gcount() < record_size) {
                 size_t got = (size_t)fin.gcount();
                 fill(rec.begin() + got, rec.end(), 0);
@@ -95,13 +93,43 @@ void disk_read_thread(const string &filename) {
     cv.notify_one();
 }
 
-void network_sender_thread() {
-    const uint32_t RECORDS_PER_PACKET = 16; // small fragmentation unit
-    uint32_t blast_no = 0;
+void send_packet(const BlastPacket &pkt, uint32_t logical_id) {
+    const uint32_t RECORDS_PER_PACKET = 16;
+    uint32_t total_packets = (pkt.num_segments + RECORDS_PER_PACKET - 1) / RECORDS_PER_PACKET;
+    size_t rec_size = negotiated_header.record_size;
 
-    // set a recv timeout on the socket for per-blast REC_MISS waiting
+    for (uint32_t packet = 0; packet < total_packets; ++packet) {
+        uint32_t start_idx = packet * RECORDS_PER_PACKET;
+        uint32_t end_idx = min<uint32_t>((uint32_t)pkt.num_segments - 1, start_idx + RECORDS_PER_PACKET - 1);
+        uint32_t num_segments_in_packet = end_idx - start_idx + 1;
+
+        size_t header_size = sizeof(uint32_t) * 4;
+        size_t packet_size = header_size + num_segments_in_packet * sizeof(Segment) + num_segments_in_packet * rec_size;
+        vector<char> send_buf(packet_size);
+
+        uint32_t header_buf[4] = {logical_id, packet, total_packets, num_segments_in_packet};
+        memcpy(send_buf.data(), header_buf, header_size);
+        memcpy(send_buf.data() + header_size, pkt.segments.data() + start_idx, num_segments_in_packet * sizeof(Segment));
+        size_t data_offset = (size_t)start_idx * rec_size;
+        memcpy(send_buf.data() + header_size + num_segments_in_packet * sizeof(Segment),
+               pkt.data.data() + data_offset, num_segments_in_packet * rec_size);
+
+        ssize_t s = sendto(sockfd, send_buf.data(), packet_size, 0, (struct sockaddr *)&receiver_addr, sizeof(receiver_addr));
+        if (s == -1) {
+            sender_log << "[Sender] sendto error: " << strerror(errno) << endl;
+        } else {
+            total_packets_sent++;
+            total_bytes_sent += (size_t)s;
+            sender_log << "[Sender] Sent packet " << packet << " of " << total_packets
+                       << " for blast " << logical_id << " (size=" << s << ")" << endl;
+        }
+    }
+}
+
+void network_sender_thread() {
+    uint32_t blast_no = 0;
     struct timeval tv;
-    tv.tv_sec = 2; // 2 seconds default wait for REC_MISS (tunable)
+    tv.tv_sec = 2;
     tv.tv_usec = 0;
     setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
@@ -117,71 +145,73 @@ void network_sender_thread() {
         }
 
         uint32_t logical_id = ++blast_no;
-        uint32_t total_packets = (pkt.num_segments + RECORDS_PER_PACKET - 1) / RECORDS_PER_PACKET;
 
         if (total_logical_blasts_sent == 0) send_start_time = chrono::steady_clock::now();
 
-        for (uint32_t packet = 0; packet < total_packets; ++packet) {
-            uint32_t start_idx = packet * RECORDS_PER_PACKET;
-            uint32_t end_idx = min<uint32_t>((uint32_t)pkt.num_segments - 1, start_idx + RECORDS_PER_PACKET - 1);
-            uint32_t num_segments_in_packet = end_idx - start_idx + 1;
-
-            size_t rec_size = negotiated_header.record_size;
-            size_t header_size = sizeof(uint32_t) * 4;
-            size_t packet_size = header_size + num_segments_in_packet * sizeof(Segment) + num_segments_in_packet * rec_size;
-            vector<char> send_buf(packet_size);
-
-            uint32_t header_buf[4] = {logical_id, packet, total_packets, num_segments_in_packet};
-            memcpy(send_buf.data(), header_buf, header_size);
-            memcpy(send_buf.data() + header_size, pkt.segments.data() + start_idx, num_segments_in_packet * sizeof(Segment));
-            size_t data_offset = (size_t)start_idx * rec_size;
-            memcpy(send_buf.data() + header_size + num_segments_in_packet * sizeof(Segment),
-                   pkt.data.data() + data_offset, num_segments_in_packet * rec_size);
-
-            ssize_t s = sendto(sockfd, send_buf.data(), packet_size, 0, (struct sockaddr *)&receiver_addr, sizeof(receiver_addr));
-            if (s == -1) {
-                sender_log << "[Sender] sendto error: " << strerror(errno) << endl;
-            } else {
-                total_packets_sent++;
-                total_bytes_sent += (size_t)s;
-                sender_log << "[Sender] Sent packet " << packet << " of " << total_packets
-                           << " for blast " << logical_id << " (size=" << s << ")" << endl;
-            }
-        }
+        // Send original blast
+        send_packet(pkt, logical_id);
 
         total_logical_blasts_sent++;
-        sender_log << "[Sender] Blast " << logical_id << " sent in " << total_packets
-                   << " packets with records (" << pkt.segments.front().start << "-" << pkt.segments.back().end << ")" << endl;
+        sender_log << "[Sender] Blast " << logical_id << " sent with records (" 
+                   << pkt.segments.front().start << "-" << pkt.segments.back().end << ")" << endl;
         sender_log << "[Sender] is_blast_over: Blast " << logical_id << endl;
 
-        // Wait for REC_MISS for this logical blast (with timeout)
+        // Wait for REC_MISS
         char buf[8192];
         socklen_t addrlen = sizeof(receiver_addr);
         ssize_t rn = recvfrom(sockfd, buf, sizeof(buf), 0, (struct sockaddr *)&receiver_addr, &addrlen);
+
         if (rn <= 0) {
             sender_log << "[Sender] No REC_MISS received (timeout or error) for blast " << logical_id << endl;
-        } else {
-            string rec_miss(buf, (size_t)rn);
-            sender_log << "[Sender] REC_MISS for blast " << logical_id << ": " << rec_miss << endl;
-            total_rec_miss_msgs++;
+            continue;
+        }
 
-            // parse and count missing records reported (format: [[a,b],[c,d],...])
-            vector<long> nums;
-            long cur = 0; bool in_num = false; bool neg = false;
-            for (char ch : rec_miss) {
-                if (ch == '-') { neg = true; in_num = true; cur = 0; }
-                else if (isdigit((unsigned char)ch)) { in_num = true; cur = cur*10 + (ch - '0'); }
-                else { if (in_num) { nums.push_back(neg ? -cur : cur); cur = 0; in_num = false; neg = false; } }
-            }
-            if (in_num) nums.push_back(neg ? -cur : cur);
-            for (size_t i = 0; i + 1 < nums.size(); i += 2) {
-                long a = nums[i]; long b = nums[i+1];
-                if (b >= a) total_missing_records_reported += (uint64_t)(b - a + 1);
+        string rec_miss(buf, (size_t)rn);
+        sender_log << "[Sender] REC_MISS for blast " << logical_id << ": " << rec_miss << endl;
+        total_rec_miss_msgs++;
+
+        // Parse REC_MISS ranges
+        vector<pair<uint32_t,uint32_t>> missing_ranges;
+        long cur = 0; bool in_num = false; bool neg = false;
+        vector<long> nums;
+        for (char ch : rec_miss) {
+            if (ch == '-') { neg = true; in_num = true; cur = 0; }
+            else if (isdigit((unsigned char)ch)) { in_num = true; cur = cur*10 + (ch - '0'); }
+            else { if (in_num) { nums.push_back(neg?-cur:cur); cur=0; in_num=false; neg=false; } }
+        }
+        if (in_num) nums.push_back(neg?-cur:cur);
+        for (size_t i = 0; i + 1 < nums.size(); i+=2) missing_ranges.emplace_back(nums[i], nums[i+1]);
+
+        // Count total missing records
+        for (auto &p : missing_ranges) total_missing_records_reported += (p.second - p.first + 1);
+
+        // --- RETRANSMIT missing records ---
+        if (!missing_ranges.empty()) {
+            sender_log << "[Sender] Retransmitting missing records for blast " << logical_id << endl;
+            for (auto &range : missing_ranges) {
+                BlastPacket retrans_pkt;
+                retrans_pkt.num_segments = 0;
+                retrans_pkt.data.clear();
+
+                uint32_t rec_size = negotiated_header.record_size;
+                ifstream fin("inputfile.bin", ios::binary); // make sure the filename is same as input
+                fin.seekg((streampos)range.first * rec_size);
+
+                for (uint32_t r = range.first; r <= range.second; ++r) {
+                    vector<char> rec(rec_size);
+                    fin.read(rec.data(), rec_size);
+                    retrans_pkt.segments.push_back({r,r});
+                    retrans_pkt.num_segments++;
+                    retrans_pkt.data.insert(retrans_pkt.data.end(), rec.begin(), rec.end());
+                }
+                send_packet(retrans_pkt, logical_id); // reuse same logical_id for retransmit
+                sender_log << "[Sender] Retransmitted records (" << range.first << "-" << range.second 
+                           << ") for blast " << logical_id << endl;
             }
         }
     }
 
-    // Send disconnect
+    // Send DISCONNECT
     string disc = "DISCONNECT";
     sendto(sockfd, disc.c_str(), disc.size(), 0, (struct sockaddr *)&receiver_addr, sizeof(receiver_addr));
     send_end_time = chrono::steady_clock::now();
@@ -197,7 +227,6 @@ void network_sender_thread() {
                << ", missing_records_reported=" << total_missing_records_reported << endl;
     sender_log << "[Sender] Duration=" << secs << "s, Throughput=" << (throughput_bps)
                << " B/s (" << (throughput_bps*8/1e6) << " Mbps)" << endl;
-
     sender_log.flush();
     sender_log.close();
 
@@ -217,10 +246,7 @@ int main(int argc, char *argv[]) {
     sender_log.open("sender.log", ios::out | ios::trunc);
     if (!sender_log.is_open()) {
         cerr << "Unable to open sender.log for writing\n";
-    } else {
-        sender_log << std::unitbuf; // flush after each insertion
-        sender_log << "[Sender] Log started\n";
-    }
+    } else sender_log << std::unitbuf << "[Sender] Log started\n";
 
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) { perror("socket"); return 1; }
@@ -234,47 +260,34 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // Read file size
+    // Prepare header
     ifstream fin(filename, ios::binary | ios::ate);
-    if (!fin) {
-        cerr << "Cannot open input file: " << filename << "\n";
-        close(sockfd);
-        return 1;
-    }
-    streampos fsize = fin.tellg();
-    fin.close();
+    if (!fin) { cerr << "Cannot open input file: " << filename << "\n"; close(sockfd); return 1; }
+    streampos fsize = fin.tellg(); fin.close();
     negotiated_header.file_size = (uint32_t)max((streampos)0, fsize);
     negotiated_header.record_size = 512;
-    // Compute M (records per logical blast)
-    negotiated_header.M = 500; // forced as earlier; you can compute safe M if desired
+    negotiated_header.M = 500; // forced
     sender_log << "[Sender] Forcing records-per-blast M=" << negotiated_header.M
                << " (record_size=" << negotiated_header.record_size << ", file_size=" << negotiated_header.file_size << ")\n";
 
-    // Send FILE_HDR
     ssize_t s = sendto(sockfd, &negotiated_header, sizeof(negotiated_header), 0, (struct sockaddr *)&receiver_addr, sizeof(receiver_addr));
     if (s <= 0) sender_log << "[Sender] Failed to send FILE_HDR\n";
     else sender_log << "[Sender] Sent FILE_HDR\n";
 
-    // Wait for FILE_HDR_ACK (with a short timeout)
+    // Wait for ACK
     struct timeval tv;
     tv.tv_sec = 2; tv.tv_usec = 0;
     setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
-    char ack[64];
-    socklen_t addrlen = sizeof(receiver_addr);
+    char ack[64]; socklen_t addrlen = sizeof(receiver_addr);
     ssize_t rn = recvfrom(sockfd, ack, sizeof(ack), 0, (struct sockaddr *)&receiver_addr, &addrlen);
-    if (rn <= 0) {
-        sender_log << "[Sender] No FILE_HDR_ACK received (continuing anyway)\n";
-    } else {
-        sender_log << "[Sender] Received FILE_HDR_ACK\n";
-    }
+    if (rn <= 0) sender_log << "[Sender] No FILE_HDR_ACK received (continuing anyway)\n";
+    else sender_log << "[Sender] Received FILE_HDR_ACK\n";
 
-    // reset socket timeout to 0 for normal sends (we set per-blast wait later)
     tv.tv_sec = 0; tv.tv_usec = 0;
     setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
     thread t_disk(disk_read_thread, filename);
     thread t_net(network_sender_thread);
-
     t_disk.join();
     t_net.join();
 
