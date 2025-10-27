@@ -36,22 +36,20 @@
 [Sender] Sent packet 31 of 32 for blast 1 (size=2096)
 [Sender] Blast 1 sent with records (0-499)
 [Sender] is_blast_over: Blast 1
-[Sender] REC_MISS for blast 1: [[66,66],[98,98],[150,150],[313,313],[364,364],[478,478],[494,494]]
+[Sender] REC_MISS for blast 1: [[91,91],[116,116],[156,156],[195,195],[268,268],[371,371]]
 [Sender] Retransmitting missing records for blast 1
 [Sender] Sent packet 0 of 1 for blast 1 (size=536)
-[Sender] Retransmitted records (66-66) for blast 1
+[Sender] Retransmitted records (91-91) for blast 1
 [Sender] Sent packet 0 of 1 for blast 1 (size=536)
-[Sender] Retransmitted records (98-98) for blast 1
+[Sender] Retransmitted records (116-116) for blast 1
 [Sender] Sent packet 0 of 1 for blast 1 (size=536)
-[Sender] Retransmitted records (150-150) for blast 1
+[Sender] Retransmitted records (156-156) for blast 1
 [Sender] Sent packet 0 of 1 for blast 1 (size=536)
-[Sender] Retransmitted records (313-313) for blast 1
+[Sender] Retransmitted records (195-195) for blast 1
 [Sender] Sent packet 0 of 1 for blast 1 (size=536)
-[Sender] Retransmitted records (364-364) for blast 1
+[Sender] Retransmitted records (268-268) for blast 1
 [Sender] Sent packet 0 of 1 for blast 1 (size=536)
-[Sender] Retransmitted records (478-478) for blast 1
-[Sender] Sent packet 0 of 1 for blast 1 (size=536)
-[Sender] Retransmitted records (494-494) for blast 1
+[Sender] Retransmitted records (371-371) for blast 1
 [Sender] Sent packet 0 of 32 for blast 2 (size=8336)
 [Sender] Sent packet 1 of 32 for blast 2 (size=8336)
 [Sender] Sent packet 2 of 32 for blast 2 (size=8336)
@@ -86,20 +84,18 @@
 [Sender] Sent packet 31 of 32 for blast 2 (size=2096)
 [Sender] Blast 2 sent with records (500-999)
 [Sender] is_blast_over: Blast 2
-[Sender] REC_MISS for blast 2: [[98,98],[150,150],[313,313],[364,364],[478,478],[494,494]]
+[Sender] REC_MISS for blast 2: [[116,116],[156,156],[195,195],[268,268],[371,371]]
 [Sender] Retransmitting missing records for blast 2
 [Sender] Sent packet 0 of 1 for blast 2 (size=536)
-[Sender] Retransmitted records (98-98) for blast 2
+[Sender] Retransmitted records (116-116) for blast 2
 [Sender] Sent packet 0 of 1 for blast 2 (size=536)
-[Sender] Retransmitted records (150-150) for blast 2
+[Sender] Retransmitted records (156-156) for blast 2
 [Sender] Sent packet 0 of 1 for blast 2 (size=536)
-[Sender] Retransmitted records (313-313) for blast 2
+[Sender] Retransmitted records (195-195) for blast 2
 [Sender] Sent packet 0 of 1 for blast 2 (size=536)
-[Sender] Retransmitted records (364-364) for blast 2
+[Sender] Retransmitted records (268-268) for blast 2
 [Sender] Sent packet 0 of 1 for blast 2 (size=536)
-[Sender] Retransmitted records (478-478) for blast 2
-[Sender] Sent packet 0 of 1 for blast 2 (size=536)
-[Sender] Retransmitted records (494-494) for blast 2
+[Sender] Retransmitted records (371-371) for blast 2
 [Sender] Sent packet 0 of 17 for blast 3 (size=8336)
 [Sender] Sent packet 1 of 17 for blast 3 (size=8336)
 [Sender] Sent packet 2 of 17 for blast 3 (size=8336)
@@ -119,18 +115,16 @@
 [Sender] Sent packet 16 of 17 for blast 3 (size=1056)
 [Sender] Blast 3 sent with records (1000-1257)
 [Sender] is_blast_over: Blast 3
-[Sender] REC_MISS for blast 3: [[150,150],[313,313],[364,364],[478,478],[494,494]]
+[Sender] REC_MISS for blast 3: [[156,156],[195,195],[268,268],[371,371]]
 [Sender] Retransmitting missing records for blast 3
 [Sender] Sent packet 0 of 1 for blast 3 (size=536)
-[Sender] Retransmitted records (150-150) for blast 3
+[Sender] Retransmitted records (156-156) for blast 3
 [Sender] Sent packet 0 of 1 for blast 3 (size=536)
-[Sender] Retransmitted records (313-313) for blast 3
+[Sender] Retransmitted records (195-195) for blast 3
 [Sender] Sent packet 0 of 1 for blast 3 (size=536)
-[Sender] Retransmitted records (364-364) for blast 3
+[Sender] Retransmitted records (268-268) for blast 3
 [Sender] Sent packet 0 of 1 for blast 3 (size=536)
-[Sender] Retransmitted records (478-478) for blast 3
-[Sender] Sent packet 0 of 1 for blast 3 (size=536)
-[Sender] Retransmitted records (494-494) for blast 3
+[Sender] Retransmitted records (371-371) for blast 3
 [Sender] DISCONNECTED
-[Sender] Summary: logical_blasts_sent=3, packets_sent=99, bytes_sent=665104, rec_miss_msgs=3, missing_records_reported=18
-[Sender] Duration=0.0189409s, Throughput=3.51148e+07 B/s (280.918 Mbps)
+[Sender] Summary: logical_blasts_sent=3, packets_sent=96, bytes_sent=663496, rec_miss_msgs=3, missing_records_reported=15
+[Sender] Duration=0.0178662s, Throughput=3.71369e+07 B/s (297.095 Mbps)

@@ -33,33 +33,29 @@
 [Receiver] Received Packet 30 of 32 for Blast 1 with records (480-495)
 [Receiver] Received Packet 31 of 32 for Blast 1 with records (496-499)
 [Receiver] is_blast_over: Blast 1
-[Receiver] Sent REC_MISS: [[66,66],[98,98],[150,150],[313,313],[364,364],[478,478],[494,494]]
-[Receiver] Received Packet 0 of 1 for Blast 1 with records (66-66)
-[Receiver] Retransmitted record 66 written
+[Receiver] Sent REC_MISS: [[91,91],[116,116],[156,156],[195,195],[268,268],[371,371]]
+[Receiver] Received Packet 0 of 1 for Blast 1 with records (91-91)
+[Receiver] Retransmitted record 91 written
 [Receiver] is_blast_over: Blast 1
-[Receiver] Sent REC_MISS: [[98,98],[150,150],[313,313],[364,364],[478,478],[494,494]]
-[Receiver] Received Packet 0 of 1 for Blast 1 with records (98-98)
-[Receiver] Retransmitted record 98 written
+[Receiver] Sent REC_MISS: [[116,116],[156,156],[195,195],[268,268],[371,371]]
+[Receiver] Received Packet 0 of 1 for Blast 1 with records (116-116)
+[Receiver] Retransmitted record 116 written
 [Receiver] is_blast_over: Blast 1
-[Receiver] Sent REC_MISS: [[150,150],[313,313],[364,364],[478,478],[494,494]]
-[Receiver] Received Packet 0 of 1 for Blast 1 with records (150-150)
-[Receiver] Retransmitted record 150 written
+[Receiver] Sent REC_MISS: [[156,156],[195,195],[268,268],[371,371]]
+[Receiver] Received Packet 0 of 1 for Blast 1 with records (156-156)
+[Receiver] Retransmitted record 156 written
 [Receiver] is_blast_over: Blast 1
-[Receiver] Sent REC_MISS: [[313,313],[364,364],[478,478],[494,494]]
-[Receiver] Received Packet 0 of 1 for Blast 1 with records (313-313)
-[Receiver] Retransmitted record 313 written
+[Receiver] Sent REC_MISS: [[195,195],[268,268],[371,371]]
+[Receiver] Received Packet 0 of 1 for Blast 1 with records (195-195)
+[Receiver] Retransmitted record 195 written
 [Receiver] is_blast_over: Blast 1
-[Receiver] Sent REC_MISS: [[364,364],[478,478],[494,494]]
-[Receiver] Received Packet 0 of 1 for Blast 1 with records (364-364)
-[Receiver] Retransmitted record 364 written
+[Receiver] Sent REC_MISS: [[268,268],[371,371]]
+[Receiver] Received Packet 0 of 1 for Blast 1 with records (268-268)
+[Receiver] Retransmitted record 268 written
 [Receiver] is_blast_over: Blast 1
-[Receiver] Sent REC_MISS: [[478,478],[494,494]]
-[Receiver] Received Packet 0 of 1 for Blast 1 with records (478-478)
-[Receiver] Retransmitted record 478 written
-[Receiver] is_blast_over: Blast 1
-[Receiver] Sent REC_MISS: [[494,494]]
-[Receiver] Received Packet 0 of 1 for Blast 1 with records (494-494)
-[Receiver] Retransmitted record 494 written
+[Receiver] Sent REC_MISS: [[371,371]]
+[Receiver] Received Packet 0 of 1 for Blast 1 with records (371-371)
+[Receiver] Retransmitted record 371 written
 [Receiver] is_blast_over: Blast 1
 [Receiver] Sent REC_MISS: []
 [Receiver] Received Packet 0 of 32 for Blast 2 with records (500-515)
@@ -75,30 +71,24 @@
 [Receiver] Received Packet 10 of 32 for Blast 2 with records (660-675)
 [Receiver] Received Packet 11 of 32 for Blast 2 with records (676-691)
 [Receiver] Received Packet 12 of 32 for Blast 2 with records (692-707)
-[Receiver] Received Packet 13 of 32 for Blast 2 with records (708-723)
 [Receiver] Received Packet 14 of 32 for Blast 2 with records (724-739)
 [Receiver] Received Packet 15 of 32 for Blast 2 with records (740-755)
 [Receiver] Received Packet 16 of 32 for Blast 2 with records (756-771)
 [Receiver] Received Packet 17 of 32 for Blast 2 with records (772-787)
-[Receiver] Received Packet 18 of 32 for Blast 2 with records (788-803)
 [Receiver] Received Packet 19 of 32 for Blast 2 with records (804-819)
 [Receiver] Received Packet 20 of 32 for Blast 2 with records (820-835)
 [Receiver] Received Packet 21 of 32 for Blast 2 with records (836-851)
 [Receiver] Received Packet 22 of 32 for Blast 2 with records (852-867)
-[Receiver] Received Packet 23 of 32 for Blast 2 with records (868-883)
 [Receiver] Received Packet 24 of 32 for Blast 2 with records (884-899)
 [Receiver] Received Packet 25 of 32 for Blast 2 with records (900-915)
 [Receiver] Received Packet 26 of 32 for Blast 2 with records (916-931)
-[Receiver] Received Packet 28 of 32 for Blast 2 with records (948-963)
-[Receiver] Received Packet 29 of 32 for Blast 2 with records (964-979)
-[Receiver] Received Packet 30 of 32 for Blast 2 with records (980-995)
+[Receiver] Received Packet 27 of 32 for Blast 2 with records (932-947)
 [Receiver] Received Packet 31 of 32 for Blast 2 with records (996-999)
-[Receiver] Received Packet 0 of 1 for Blast 2 with records (98-98)
-[Receiver] Received Packet 0 of 1 for Blast 2 with records (150-150)
-[Receiver] Received Packet 0 of 1 for Blast 2 with records (313-313)
-[Receiver] Received Packet 0 of 1 for Blast 2 with records (364-364)
-[Receiver] Received Packet 0 of 1 for Blast 2 with records (478-478)
-[Receiver] Received Packet 0 of 1 for Blast 2 with records (494-494)
+[Receiver] Received Packet 0 of 1 for Blast 2 with records (116-116)
+[Receiver] Received Packet 0 of 1 for Blast 2 with records (156-156)
+[Receiver] Received Packet 0 of 1 for Blast 2 with records (195-195)
+[Receiver] Received Packet 0 of 1 for Blast 2 with records (268-268)
+[Receiver] Received Packet 0 of 1 for Blast 2 with records (371-371)
 [Receiver] Received Packet 0 of 17 for Blast 3 with records (1000-1015)
 [Receiver] Received Packet 1 of 17 for Blast 3 with records (1016-1031)
 [Receiver] Received Packet 2 of 17 for Blast 3 with records (1032-1047)
@@ -117,22 +107,19 @@
 [Receiver] Received Packet 15 of 17 for Blast 3 with records (1240-1255)
 [Receiver] Received Packet 16 of 17 for Blast 3 with records (1256-1257)
 [Receiver] is_blast_over: Blast 3
-[Receiver] Sent REC_MISS: [[1043,1043]]
-[Receiver] Received Packet 0 of 1 for Blast 3 with records (150-150)
+[Receiver] Sent REC_MISS: [[1083,1083],[1167,1167],[1249,1249]]
+[Receiver] Received Packet 0 of 1 for Blast 3 with records (156-156)
 [Receiver] is_blast_over: Blast 3
-[Receiver] Sent REC_MISS: [[1043,1043]]
-[Receiver] Received Packet 0 of 1 for Blast 3 with records (313-313)
+[Receiver] Sent REC_MISS: [[1083,1083],[1167,1167],[1249,1249]]
+[Receiver] Received Packet 0 of 1 for Blast 3 with records (195-195)
 [Receiver] is_blast_over: Blast 3
-[Receiver] Sent REC_MISS: [[1043,1043]]
-[Receiver] Received Packet 0 of 1 for Blast 3 with records (364-364)
+[Receiver] Sent REC_MISS: [[1083,1083],[1167,1167],[1249,1249]]
+[Receiver] Received Packet 0 of 1 for Blast 3 with records (268-268)
 [Receiver] is_blast_over: Blast 3
-[Receiver] Sent REC_MISS: [[1043,1043]]
-[Receiver] Received Packet 0 of 1 for Blast 3 with records (478-478)
+[Receiver] Sent REC_MISS: [[1083,1083],[1167,1167],[1249,1249]]
+[Receiver] Received Packet 0 of 1 for Blast 3 with records (371-371)
 [Receiver] is_blast_over: Blast 3
-[Receiver] Sent REC_MISS: [[1043,1043]]
-[Receiver] Received Packet 0 of 1 for Blast 3 with records (494-494)
-[Receiver] is_blast_over: Blast 3
-[Receiver] Sent REC_MISS: [[1043,1043]]
+[Receiver] Sent REC_MISS: [[1083,1083],[1167,1167],[1249,1249]]
 [Receiver] Sender disconnected
-[Receiver] Summary: blasts=14, bytes=656768, written=762, lost=8
-[Receiver] Duration=0.0197846s, Throughput=3.3196e+07 B/s (265.568 Mbps)
+[Receiver] Summary: blasts=12, bytes=613480, written=759, lost=9
+[Receiver] Duration=0.017991s, Throughput=3.40993e+07 B/s (272.794 Mbps)

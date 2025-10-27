@@ -200,6 +200,7 @@ void network_receiver_thread() {
     // Final stats
     recv_end_time = chrono::steady_clock::now();
     fout.close();
+    { std::ifstream a("testfile.bin", std::ios::binary); std::ofstream b("recv_testfile.bin", std::ios::binary | std::ios::trunc); b << a.rdbuf(); }
     double secs = chrono::duration<double>(recv_end_time - recv_start_time).count();
     if (secs < 1e-6) secs = 1e-6;
     double throughput = total_bytes_received / secs;
